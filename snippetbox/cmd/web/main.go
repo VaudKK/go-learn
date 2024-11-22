@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -11,10 +12,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type applicaiton struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+type application struct {
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -27,17 +29,25 @@ func main() {
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	db, err := openDB(*dsn)
-	
+
 	if err != nil {
 		errorLog.Fatal(err)
 	}
 
 	defer db.Close()
 
-	app := &applicaiton{
-		infoLog:  infoLog,
-		errorLog: errorLog,
-		snippets: &mysql.SnippetModel{DB: db},
+	//initialize a new template cache
+	templateCache, err := newTemplateCache("./ui/html")
+
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	app := &application{
+		infoLog:       infoLog,
+		errorLog:      errorLog,
+		snippets:      &mysql.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	srv := &http.Server{

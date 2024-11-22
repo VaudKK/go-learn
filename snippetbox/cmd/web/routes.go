@@ -2,7 +2,7 @@ package main
 
 import "net/http"
 
-func (app *applicaiton) routes() *http.ServeMux {
+func (app *application) routes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", app.home)
 	mux.HandleFunc("/snippet", app.showSnippet)
